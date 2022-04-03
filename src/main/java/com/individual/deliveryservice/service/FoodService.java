@@ -32,11 +32,11 @@ public class FoodService {
             dto.setRestaurant(restaurant);
 
             Optional<Food> checkFood = foodRepository.findByRestaurantAndName(restaurant,dto.getName());
-//            if(checkFood.isPresent()){
-//                System.out.println("이미 존재해");
-//                System.out.println(checkFood);
-//                throw new IllegalArgumentException("같은 음식점에 같은 음식이 존재합니다.");
-//            }
+            if(checkFood.isPresent()){
+                System.out.println("이미 존재해");
+                System.out.println(checkFood);
+                throw new IllegalArgumentException("같은 음식점에 같은 음식이 존재합니다.");
+            }
             Food food = new Food(dto);
             foodRepository.save(food);
             foodList.add(food);
