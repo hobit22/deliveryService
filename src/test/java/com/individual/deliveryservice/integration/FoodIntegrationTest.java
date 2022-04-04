@@ -1,4 +1,5 @@
 package com.individual.deliveryservice.integration;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Builder;
@@ -209,7 +210,7 @@ class FoodIntegrationTest {
     @DisplayName("음식명")
     class FoodName {
         @Test
-        @Order(4)
+        @Order(1)
         @DisplayName("음식 1개 등록")
         void test1() throws JsonProcessingException {
             // given
@@ -233,7 +234,7 @@ class FoodIntegrationTest {
         }
 
         @Test
-        @Order(5)
+        @Order(2)
         @DisplayName("기존 저장된 음식명과 중복")
         void test2() throws JsonProcessingException {
             // given
@@ -261,7 +262,7 @@ class FoodIntegrationTest {
         }
 
         @Test
-        @Order(6)
+        @Order(3)
         @DisplayName("입력된 음식명에 중복 에러")
         void test3() throws JsonProcessingException {
             // given
@@ -291,7 +292,7 @@ class FoodIntegrationTest {
         }
 
         @Test
-        @Order(7)
+        @Order(4)
         @DisplayName("음식점 2에 음식명 1에 등록되어 있는 음식명 입력 가능")
         void test4() throws JsonProcessingException {
             // given

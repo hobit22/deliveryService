@@ -1,8 +1,6 @@
 package com.individual.deliveryservice.model;
 
-import com.individual.deliveryservice.dto.OrderResponseDto;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -11,21 +9,32 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 public class Orders {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @ManyToOne(optional = false)
+//    @ManyToOne(optional = false)
+//    @JoinColumn(nullable = false)
+//    private Restaurant restaurant;
+
+    @OneToMany(mappedBy = "orders", cascade = CascadeType.ALL)
+    private List<FoodOrder> foodOrders = new ArrayList<>();
+
+    @ManyToOne
     @JoinColumn(nullable = false)
     private Restaurant restaurant;
 
-    @OneToMany
-    private List<OrderItem> foods = new ArrayList<>();
+    @Column
+    private Long deliveryFee =0L;
 
-    public Orders(Restaurant restaurant, ){
-        this.restaurant = restaurant;
+    @Column
+    private Long totalPrice = 0L;
 
-
+    public void addOrderItem(FoodOrder foodOrder){
+        this.getFoodOrders().add(foodOrder);
+        foodOrder.setOrders(this);
     }
 }

@@ -9,6 +9,7 @@ import com.individual.deliveryservice.validator.FoodValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -20,6 +21,7 @@ public class FoodService {
     private final FoodRepository foodRepository;
     private final FoodValidator foodValidator;
 
+    @Transactional
     public List<Food> createFood(Long restaurantId, List<FoodDto> dtoList) {
         System.out.println("/restaurant/{restaurantId}/food/register");
         System.out.println("restaurantId = " + restaurantId.toString());

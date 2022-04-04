@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.transaction.Transactional;
+
 @Controller
 public class RestaurantController {
 
@@ -30,6 +32,7 @@ public class RestaurantController {
 
     @PostMapping("/restaurant/register")
     @ResponseBody
+    @Transactional
     public ResponseEntity registerRestaurant(@RequestBody RestaurantDto dto){
         Restaurant restaurant = new Restaurant(dto);
         repository.save(restaurant);

@@ -12,11 +12,11 @@ import org.springframework.ui.Model;
 public class OrdersService {
     private final RestaurantRepository restaurantRepository;
 
-    public Orders getOrders(Model model){
-        System.out.println(model.addAttribute("restaurantName"));
-        Restaurant restaurant = restaurantRepository.findByName(model.getAttribute("restaurantName"));
-        Orders orders = new Orders();
-        orders.setRestaurant(restaurant);
-        return orders;
+    public void getOrders(Model model){
+//        System.out.println(model.addAttribute("restaurantName"));
+//        Restaurant restaurant = restaurantRepository.findByName(model.getAttribute("restaurantName"));
+//        Orders orders = new Orders();
+//        //orders.setName(restaurant.getName());
+        //return orders;
     }
 }

@@ -1,70 +1,139 @@
 package com.individual.deliveryservice.controller;
 
-import com.individual.deliveryservice.dto.FoodOrderRequestDto;
-import com.individual.deliveryservice.dto.OrderRequestDto;
-import com.individual.deliveryservice.dto.OrderResponseDto;
+import com.individual.deliveryservice.dto.FoodOrderDto;
+import com.individual.deliveryservice.dto.OrderDto;
 import com.individual.deliveryservice.model.Food;
+import com.individual.deliveryservice.model.FoodOrder;
+import com.individual.deliveryservice.model.Orders;
 import com.individual.deliveryservice.model.Restaurant;
+import com.individual.deliveryservice.repository.FoodOrderRepository;
 import com.individual.deliveryservice.repository.FoodRepository;
+import com.individual.deliveryservice.repository.OrdersRepository;
 import com.individual.deliveryservice.repository.RestaurantRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
+import javax.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Controller
+@RestController
 @RequiredArgsConstructor
 public class OrdersController {
     private final RestaurantRepository restaurantRepository;
     private final FoodRepository foodRepository;
+    private final OrdersRepository ordersRepository;
+    private final FoodOrderRepository foodOrderRepository;
+
     @GetMapping("/orders")
-    public OrderResponseDto getOrders(){
+    public List<OrderDto.Response> getOrders() {
 
+        List<OrderDto.Response> orderDtoResponseList = new ArrayList<>();
 
+        List<Orders> ordersList = ordersRepository.findAll();
+
+        for (Orders orders : ordersList) {
+            OrderDto.Response orderDtoResponse = new OrderDto.Response();
+
+            orderDtoResponse.setRestaurantName(orders.getRestaurant().getName());
+            List<FoodOrderDto.Response> foodOrderResponseList = new ArrayList<>();
+            for (FoodOrder foodOrder : orders.getFoodOrders()) {
+                foodOrderResponseList.add(new FoodOrderDto.Response(foodOrder));
+            }
+            orderDtoResponse.setFoods(foodOrderResponseList);
+            orderDtoResponse.setDeliveryFee(orders.getDeliveryFee());
+            orderDtoResponse.setTotalPrice(orders.getTotalPrice());
+            orderDtoResponseList.add(orderDtoResponse);
+        }
+
+        return orderDtoResponseList;
     }
 
     @PostMapping("/order/request")
-    @ResponseBody
-    public OrderResponseDto getOrders(@RequestBody OrderRequestDto dto){
-        Long restaurantId = dto.getRestaurantId();
-        List<FoodOrderRequestDto> foods = dto.getFoods();
-        Restaurant restaurant =restaurantRepository.findById(restaurantId).orElseThrow(
-                ()-> new IllegalArgumentException("가게가 존재하지 않습니다.")
-        );
+    @Transactional
+    public OrderDto.Response getOrders(@RequestBody OrderDto.Request request) {
+        Long restaurantId = request.getRestaurantId();
+        List<FoodOrderDto.Request> foods = request.getFoods();
 
-        OrderResponseDto orderResponseDto = new OrderResponseDto();
-        orderResponseDto.setRestaurantName(restaurant.getName());
-        Long deliveryFee = orderResponseDto.getDeliveryFee();
-        Long totalFoodPrice = 0L;
-        for(FoodOrderRequestDto foodOrderRequestDto : foods){
+        //가게 존재 확인
+        Restaurant restaurant = restaurantRepository.findById(restaurantId).orElseThrow(
+                () -> new IllegalArgumentException("가게가 존재하지 않습니다.")
+        );
+        Long deliveryFee = restaurant.getDeliveryFee();
+        Long minOrderPrice = restaurant.getMinOrderPrice();
+        Long totalOrderPrice = 0L;
+        //음식 확인
+        for (FoodOrderDto.Request foodOrderRequestDto : foods) {
             Long foodId = foodOrderRequestDto.getId();
             Long foodQuantity = foodOrderRequestDto.getQuantity();
 
-            //id 존재 체크
-            Food food = foodRepository.findById(foodId).orElseThrow(
-                    ()->new IllegalArgumentException("음식이 존재하지 않습니다.")
-            );
-            //quantity 숫자 체크
-            if(foodQuantity < 1 || foodQuantity > 100){
-                throw new IllegalArgumentException("음식 수량이 올바르지 않습니다.");
+            Optional<Food> food = foodRepository.findByRestaurantAndId(restaurant, foodId);
+            if (!food.isPresent()) {
+                throw new IllegalArgumentException("음식이 존재하지 않습니다.");
             }
-            //total price 에 더하기
 
-            totalFoodPrice += food.getPrice() * foodQuantity;
+            if (foodQuantity < 1 || foodQuantity > 100) {
+                throw new IllegalArgumentException("주문 수량 범위가 올바르지 않습니다.");
+            }
+
+            long foodPrice = food.get().getPrice() * foodQuantity;
+
+            totalOrderPrice += foodPrice;
         }
 
-        if(totalFoodPrice < restaurant.getMinOrderPrice()){
+        // 최소주믄금액 확인
+        if (totalOrderPrice < minOrderPrice) {
             throw new IllegalArgumentException("최소주문 금액보다 작습니다.");
         }
 
-        orderResponseDto.setTotalPrice(totalFoodPrice + deliveryFee);
-        System.out.println(orderResponseDto.getTotalPrice());
+        totalOrderPrice += deliveryFee;
 
-        return orderResponseDto;
+        //Orders, FoodOrder 생성
+        Orders orders = new Orders();
+        orders.setRestaurant(restaurant);
+        ordersRepository.save(orders);
+
+        OrderDto.Response orderDtoResponse = new OrderDto.Response();
+        List<FoodOrderDto.Response> foodOrderDtoResponses = new ArrayList<>();
+        for (FoodOrderDto.Request foodOrderRequestDto : foods) {
+            Optional<Food> food = foodRepository.findByRestaurantAndId(restaurant, foodOrderRequestDto.getId());
+
+            Long foodQuantity = foodOrderRequestDto.getQuantity();
+            Long foodPrice = food.get().getPrice() * foodQuantity;
+            String foodname = food.get().getName();
+            
+
+            FoodOrder foodOrder = FoodOrder.builder()
+                    .orders(orders)
+                    .name(foodname)
+                    .quantity(foodQuantity)
+                    .price(foodPrice)
+                    .build();
+
+            FoodOrderDto.Response foodorderDtoResponse = new FoodOrderDto.Response(foodOrder);
+            foodOrderDtoResponses.add(foodorderDtoResponse);
+            foodOrderRepository.save(foodOrder);
+        }
+
+
+        orders.setDeliveryFee(deliveryFee);
+        orders.setTotalPrice(totalOrderPrice);
+
+        ordersRepository.save(orders);
+
+        orderDtoResponse = OrderDto.Response.builder()
+                .foods(foodOrderDtoResponses)
+                .restaurantName(restaurant.getName())
+                .deliveryFee(deliveryFee)
+                .totalPrice(totalOrderPrice)
+                .build();
+
+        return orderDtoResponse;
     }
 }
