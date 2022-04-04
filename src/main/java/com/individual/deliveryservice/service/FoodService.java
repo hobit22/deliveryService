@@ -45,4 +45,10 @@ public class FoodService {
 
         return foodRepository.findAllByRestaurant(restaurant);
     }
+
+    public Food isValidFood(Long foodId) {
+        return foodRepository.findById(foodId).orElseThrow(
+                () -> new IllegalArgumentException("존재하지 않는 음식입니다.")
+        );
+    }
 }

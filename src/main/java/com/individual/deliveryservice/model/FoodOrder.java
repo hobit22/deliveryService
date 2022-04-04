@@ -1,6 +1,5 @@
 package com.individual.deliveryservice.model;
 
-import com.individual.deliveryservice.dto.FoodOrderDto;
 import lombok.*;
 
 import javax.persistence.*;
@@ -29,5 +28,4 @@ public class FoodOrder {
 
     @Column(nullable = false)
     private Long price;
-
 }

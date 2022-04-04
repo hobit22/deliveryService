@@ -3,7 +3,9 @@ package com.individual.deliveryservice.dto;
 import com.individual.deliveryservice.model.FoodOrder;
 import lombok.*;
 
+
 public class FoodOrderDto {
+
     @Getter
     @Setter
     @AllArgsConstructor
@@ -25,8 +27,10 @@ public class FoodOrderDto {
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
+    @Builder
     public static class Request {
         private Long id;
         private Long quantity;
     }
+
 }

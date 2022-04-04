@@ -2,10 +2,7 @@ package com.individual.deliveryservice.controller;
 
 import com.individual.deliveryservice.dto.FoodDto;
 import com.individual.deliveryservice.model.Food;
-import com.individual.deliveryservice.model.Restaurant;
-import com.individual.deliveryservice.repository.FoodRepository;
 import com.individual.deliveryservice.service.FoodService;
-import com.individual.deliveryservice.service.RestaurantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
