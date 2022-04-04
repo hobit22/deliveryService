@@ -10,6 +10,8 @@ import com.individual.deliveryservice.repository.FoodOrderRepository;
 import com.individual.deliveryservice.repository.FoodRepository;
 import com.individual.deliveryservice.repository.OrdersRepository;
 import com.individual.deliveryservice.repository.RestaurantRepository;
+import com.individual.deliveryservice.service.OrdersService;
+import com.individual.deliveryservice.service.RestaurantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,29 +32,12 @@ public class OrdersController {
     private final FoodRepository foodRepository;
     private final OrdersRepository ordersRepository;
     private final FoodOrderRepository foodOrderRepository;
+    private final RestaurantService restaurantService;
+    private final OrdersService ordersService;
 
     @GetMapping("/orders")
     public List<OrderDto.Response> getOrders() {
-
-        List<OrderDto.Response> orderDtoResponseList = new ArrayList<>();
-
-        List<Orders> ordersList = ordersRepository.findAll();
-
-        for (Orders orders : ordersList) {
-            OrderDto.Response orderDtoResponse = new OrderDto.Response();
-
-            orderDtoResponse.setRestaurantName(orders.getRestaurant().getName());
-            List<FoodOrderDto.Response> foodOrderResponseList = new ArrayList<>();
-            for (FoodOrder foodOrder : orders.getFoodOrders()) {
-                foodOrderResponseList.add(new FoodOrderDto.Response(foodOrder));
-            }
-            orderDtoResponse.setFoods(foodOrderResponseList);
-            orderDtoResponse.setDeliveryFee(orders.getDeliveryFee());
-            orderDtoResponse.setTotalPrice(orders.getTotalPrice());
-            orderDtoResponseList.add(orderDtoResponse);
-        }
-
-        return orderDtoResponseList;
+        return ordersService.getOrderDtoResponseList();
     }
 
     @PostMapping("/order/request")
@@ -62,9 +47,8 @@ public class OrdersController {
         List<FoodOrderDto.Request> foods = request.getFoods();
 
         //가게 존재 확인
-        Restaurant restaurant = restaurantRepository.findById(restaurantId).orElseThrow(
-                () -> new IllegalArgumentException("가게가 존재하지 않습니다.")
-        );
+        Restaurant restaurant = restaurantService.isValidRestaurant(restaurantId);
+
         Long deliveryFee = restaurant.getDeliveryFee();
         Long minOrderPrice = restaurant.getMinOrderPrice();
         Long totalOrderPrice = 0L;
@@ -107,7 +91,7 @@ public class OrdersController {
             Long foodQuantity = foodOrderRequestDto.getQuantity();
             Long foodPrice = food.get().getPrice() * foodQuantity;
             String foodname = food.get().getName();
-            
+
 
             FoodOrder foodOrder = FoodOrder.builder()
                     .orders(orders)
