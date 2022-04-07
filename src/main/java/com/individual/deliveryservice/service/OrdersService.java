@@ -11,6 +11,7 @@ import com.individual.deliveryservice.repository.FoodRepository;
 import com.individual.deliveryservice.repository.OrdersRepository;
 import com.individual.deliveryservice.validator.FoodOrderValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -82,12 +83,13 @@ public class OrdersService {
 
             Long foodQuantity = foodOrderRequestDto.getQuantity();
             Long foodPrice = food.getPrice() * foodQuantity;
-            String foodname = food.getName();
-
+            //String foodname = food.getName();
+            //VALID MIN ORDER PRICE 고려
 
             FoodOrder foodOrder = FoodOrder.builder()
                     .orders(orders)
-                    .name(foodname)
+                    //.name(foodname)
+                    .food(food)
                     .quantity(foodQuantity)
                     .price(foodPrice)
                     .build();
@@ -116,8 +118,11 @@ public class OrdersService {
 
 
     public Food getFoodInRestaurant(Restaurant restaurant, FoodOrderDto.Request foodOrderRequestDto) {
-        return foodRepository.findByRestaurantAndId(restaurant, foodOrderRequestDto.getId()).orElseThrow(
+        return foodRepository.findByRestaurantIdAndId(restaurant.getId(), foodOrderRequestDto.getId()).orElseThrow(
                 ()-> new IllegalArgumentException("해당가게에 음식이 존재하지 않습니다.")
         );
+//        return foodRepository.findByRestaurantAndId(restaurant, foodOrderRequestDto.getId()).orElseThrow(
+//                ()-> new IllegalArgumentException("해당가게에 음식이 존재하지 않습니다.")
+//        );
     }
 }

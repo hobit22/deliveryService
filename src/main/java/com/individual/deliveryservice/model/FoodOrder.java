@@ -17,11 +17,15 @@ public class FoodOrder {
     private int id;
 
     @ManyToOne(fetch = FetchType.EAGER,cascade=CascadeType.ALL)
-    @JoinColumn(nullable = false)
+    @JoinColumn
     private Orders orders;
 
-    @Column(nullable = false)
-    private String name;
+//    @Column(nullable = false)
+//    private String name;
+
+    @ManyToOne
+    @JoinColumn
+    private Food food;
 
     @Column(nullable = false)
     private Long quantity; // 상품 개수

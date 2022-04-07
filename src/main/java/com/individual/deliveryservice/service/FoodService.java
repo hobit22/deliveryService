@@ -18,14 +18,14 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class FoodService {
     private final FoodRepository foodRepository;
-    private final FoodValidator foodValidator;
     private final RestaurantService restaurantService;
 
-    @Transactional
+    @Transactional // for 문으로 save 하기때문에 다 저장 or 다 안저장 하기 위해
+    //spring transactional and transactional
     public void createFood(Long restaurantId, List<FoodDto> dtoList) {
         Restaurant restaurant = restaurantService.isValidRestaurant(restaurantId);
         for (FoodDto dto : dtoList) {
-            foodValidator.validateFoodInput(dto);
+            FoodValidator.validateFoodInput(dto);
             dto.setRestaurant(restaurant);
             checkSameFoodInRestaurant(restaurant, dto);
             Food food = new Food(dto);

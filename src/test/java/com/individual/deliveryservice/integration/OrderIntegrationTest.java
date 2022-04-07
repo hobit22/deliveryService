@@ -47,6 +47,18 @@ class OrderIntegrationTest {
             .price(5900)
             .build();
 
+    private FoodDto food4 = FoodDto.builder()
+            .id(null)
+            .name("테스트푸드2")
+            .price(5900)
+            .build();
+
+    private FoodDto food5 = FoodDto.builder()
+            .id(null)
+            .name("음식")
+            .price(5900)
+            .build();
+
     @BeforeEach
     public void setup() {
         headers = new HttpHeaders();
@@ -97,6 +109,8 @@ class OrderIntegrationTest {
         foodsRequest.add(food1);
         foodsRequest.add(food2);
         foodsRequest.add(food3);
+        foodsRequest.add(food4);
+        foodsRequest.add(food5);
 
         String requestBody = mapper.writeValueAsString(foodsRequest);
         HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
@@ -127,7 +141,7 @@ class OrderIntegrationTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         FoodIntegrationTest.FoodDto[] foodsResponse = response.getBody();
         assertNotNull(foodsResponse);
-        assertEquals(3, foodsResponse.length);
+        assertEquals(5, foodsResponse.length);
         // 음식 1 확인
         FoodIntegrationTest.FoodDto food1Response = Arrays.stream(foodsResponse)
                 .filter(food -> food1.getName().equals(food.getName()))
@@ -160,6 +174,30 @@ class OrderIntegrationTest {
         assertEquals(food3.getName(), food3Response.getName());
         assertEquals(food3.getPrice(), food3Response.getPrice());
         food3.id = food3Response.getId();
+
+
+        // 음식 4 확인
+        FoodIntegrationTest.FoodDto food4Response = Arrays.stream(foodsResponse)
+                .filter(food -> food4.getName().equals(food.getName()))
+                .findAny()
+                .orElse(null);
+        assertNotNull(food4Response);
+        assertNotNull(food4Response.getId());
+        assertEquals(food4.getName(), food4Response.getName());
+        assertEquals(food4.getPrice(), food4Response.getPrice());
+        food4.id = food4Response.getId();
+
+
+        // 음식 5 확인
+        FoodIntegrationTest.FoodDto food5Response = Arrays.stream(foodsResponse)
+                .filter(food -> food5.getName().equals(food.getName()))
+                .findAny()
+                .orElse(null);
+        assertNotNull(food5Response);
+        assertNotNull(food5Response.getId());
+        assertEquals(food5.getName(), food5Response.getName());
+        assertEquals(food5.getPrice(), food5Response.getPrice());
+        food5.id = food5Response.getId();
     }
 
     @Test
@@ -401,6 +439,119 @@ class OrderIntegrationTest {
 
         // 총 결제 금액 확인
         assertEquals(40400, orderDto.totalPrice);
+    }
+
+    @Test
+    @Order(10)
+    @DisplayName("주문하기")
+    void test10() throws JsonProcessingException {
+        // given
+        Long restaurantId = registeredRestaurant.id;
+
+        FoodOrderRequestDto foodOrderRequest1 = FoodOrderRequestDto.builder()
+                .id(food1.id)
+                .quantity(1)
+                .build();
+
+        FoodOrderRequestDto foodOrderRequest2 = FoodOrderRequestDto.builder()
+                .id(food2.id)
+                .quantity(2)
+                .build();
+
+        FoodOrderRequestDto foodOrderRequest3 = FoodOrderRequestDto.builder()
+                .id(food3.id)
+                .quantity(3)
+                .build();
+
+        FoodOrderRequestDto foodOrderRequest4 = FoodOrderRequestDto.builder()
+                .id(food4.id)
+                .quantity(30)
+                .build();
+
+
+        FoodOrderRequestDto foodOrderRequest5 = FoodOrderRequestDto.builder()
+                .id(food5.id)
+                .quantity(90)
+                .build();
+
+        List<FoodOrderRequestDto> foodOrderRequestDtos = new ArrayList<>();
+        foodOrderRequestDtos.add(foodOrderRequest1);
+        foodOrderRequestDtos.add(foodOrderRequest2);
+        foodOrderRequestDtos.add(foodOrderRequest3);
+        foodOrderRequestDtos.add(foodOrderRequest4);
+        foodOrderRequestDtos.add(foodOrderRequest5);
+
+        OrderRequestDto orderRequest = OrderRequestDto.builder()
+                .restaurantId(restaurantId)
+                .foods(foodOrderRequestDtos)
+                .build();
+
+        String requestBody = mapper.writeValueAsString(orderRequest);
+        HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
+
+        // when
+        ResponseEntity<OrderDto> response = restTemplate.postForEntity(
+                "/order/request",
+                request,
+                OrderDto.class);
+
+        // then
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        OrderDto orderDto = response.getBody();
+        assertNotNull(orderDto);
+        // 음식점 이름
+        assertEquals(registeredRestaurant.name, orderDto.restaurantName);
+
+        // 음식 주문 확인
+        assertEquals(5, orderDto.foods.size());
+        // 음식1 주문 확인
+        FoodOrderDto foodOrder1 = orderDto.foods.stream()
+                .filter(foodOrderDto -> foodOrderDto.name.equals(food1.getName()))
+                .findAny().orElse(null);
+        assertNotNull(foodOrder1);
+        assertEquals(food1.name, foodOrder1.name);
+        assertEquals(foodOrder1.quantity, foodOrder1.quantity);
+        assertEquals(10900, foodOrder1.price);
+        // 음식2 주문 확인
+        FoodOrderDto foodOrder2 = orderDto.foods.stream()
+                .filter(foodOrderDto -> foodOrderDto.name.equals(food2.getName()))
+                .findAny().orElse(null);
+        assertNotNull(foodOrder2);
+        assertEquals(food2.name, foodOrder2.name);
+        assertEquals(foodOrder2.quantity, foodOrder2.quantity);
+        assertEquals(9800, foodOrder2.price);
+        // 음식3 주문 확인
+        FoodOrderDto foodOrder3 = orderDto.foods.stream()
+                .filter(foodOrderDto -> foodOrderDto.name.equals(food3.getName()))
+                .findAny().orElse(null);
+        assertNotNull(foodOrder3);
+        assertEquals(food3.name, foodOrder3.name);
+        assertEquals(foodOrder3.quantity, foodOrder3.quantity);
+        assertEquals(17700, foodOrder3.price);
+
+        // 음식4 주문 확인
+        FoodOrderDto foodOrder4 = orderDto.foods.stream()
+                .filter(foodOrderDto -> foodOrderDto.name.equals(food4.getName()))
+                .findAny().orElse(null);
+        assertNotNull(foodOrder4);
+        assertEquals(food4.name, foodOrder4.name);
+        assertEquals(foodOrder4.quantity, foodOrder4.quantity);
+        assertEquals(177000, foodOrder4.price);
+
+        // 음식5 주문 확인
+        FoodOrderDto foodOrder5 = orderDto.foods.stream()
+                .filter(foodOrderDto -> foodOrderDto.name.equals(food5.getName()))
+                .findAny().orElse(null);
+        assertNotNull(foodOrder5);
+        assertEquals(food5.name, foodOrder5.name);
+        assertEquals(foodOrder5.quantity, foodOrder5.quantity);
+        assertEquals(531_000, foodOrder5.price);
+
+        // 배달비 확인
+        assertEquals(2000, orderDto.deliveryFee);
+
+        // 총 결제 금액 확인
+        assertEquals(748400, orderDto.totalPrice);
     }
 
     @Getter

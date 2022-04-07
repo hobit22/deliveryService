@@ -10,7 +10,7 @@ public class FoodValidator {
 //    public FoodValidator(RestaurantRepository restaurantRepository){
 //        this.restaurantRepository = restaurantRepository;
 //    }
-    public void validateFoodInput(FoodDto requestDto) {
+    public static void validateFoodInput(FoodDto requestDto) {
         // 입력값 Validation
         String name = requestDto.getName();
         Long price = requestDto.getPrice();

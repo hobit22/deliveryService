@@ -17,7 +17,8 @@ public class FoodOrderDto {
         private Long price;
 
         public Response(FoodOrder foodOrder){
-            this.name = foodOrder.getName();
+            //this.name = foodOrder.getName();
+            this.name = foodOrder.getFood().getName();
             this.quantity = foodOrder.getQuantity();
             this.price = foodOrder.getPrice();
         }
